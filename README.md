@@ -164,6 +164,8 @@ Funcionalidade de importação segura com processamento local.
 
 ## 📊 Análise de Níveis de Risco
 
+Sistema de monitoramento de saúde financeira com indicadores de risco.
+
 O sistema implementa indicadores de risco financeiro baseados em:
 
 - **Relação Entrada/Saída**: Comparação entre receitas e despesas
