@@ -8,6 +8,8 @@
 
 ## 🏦 Sistema Completo de Controle Financeiro
 
+Sistema desenvolvido para controle de entradas, saídas e pagamentos de contas com histórico atualizado e níveis de risco.
+
 O **Finance Master** é uma solução completa para gestão financeira pessoal e empresarial, oferecendo controle detalhado de entradas, saídas e pagamentos de contas com histórico atualizado e análise de níveis de risco financeiro.
 
 ## ✨ Funcionalidades Principais
