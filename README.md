@@ -86,7 +86,9 @@ test/
 └── README.md (Documentação dos Testes)
 ```
 
-## 🚀 Execução
+### 🚀 Execução
+
+Sistema pronto para execução com todas as funcionalidades implementadas.
 
 ### Pré-requisitos
 - Node.js >= 14.0.0
