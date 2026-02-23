@@ -118,6 +118,8 @@ node server.js
 
 ## 🧪 Testes
 
+Suite de testes abrangente aplicando os princípios de VV&T.
+
 O sistema inclui uma suíte abrangente de testes baseada nos princípios de VV&T:
 
 - **Testes Unitários**: Validação individual de cada componente
