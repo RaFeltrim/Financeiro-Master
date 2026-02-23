@@ -1,0 +1,31 @@
+{
+  "name": "controle-de-gastos",
+  "version": "1.0.0",
+  "description": "Sistema de controle de despesas pessoais",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/expense.test.js",
+    "test:unit": "node test/unit/expense.model.test.js && node test/unit/expense.service.test.js && node test/unit/expense.validator.test.js",
+    "test:integration": "node test/integration/expense.integration.test.js",
+    "test:api": "node test/api/expense.api.test.js",
+    "test:all": "node test/test-runner.js",
+    "start": "node index.js",
+    "demo-excel": "node demo-excel-integration.js"
+  },
+  "keywords": [
+    "expenses",
+    "finance",
+    "tracking"
+  ],
+  "author": "Expense Tracker",
+  "license": "MIT",
+  "directories": {
+    "test": "test"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.13.5",
+    "express": "^5.2.1",
+    "xlsx": "^0.18.5"
+  }
+}
