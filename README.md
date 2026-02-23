@@ -22,6 +22,8 @@ O **Finance Master** é uma solução completa para gestão financeira pessoal e
 - **Níveis de Risco**: Avaliação e monitoramento da saúde financeira
 
 ### 📊 Análise e Relatórios
+
+Sistema de análise de entradas e saídas com histórico atualizado e níveis de risco.
 - **Quantidade de Transações**: Monitoramento de volume de entradas e saídas
 - **Análise de Fluxo de Caixa**: Visão clara do movimento financeiro
 - **Categorização Inteligente**: Classificação automática de despesas e receitas
