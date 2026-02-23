@@ -37,6 +37,8 @@ Sistema de análise de entradas e saídas com histórico atualizado e níveis de
 
 ### 📈 Integração com VV&T (Verificação, Validação e Teste de Software)
 
+Aplicação prática dos conhecimentos adquiridos na disciplina de Verificação, Validação e Teste de Software.
+
 Este projeto foi desenvolvido aplicando os princípios aprendidos na disciplina de **Verificação, Validação e Teste de Software**, com foco em:
 
 - **Testes Unitários**: Cobertura completa de cada componente do sistema
