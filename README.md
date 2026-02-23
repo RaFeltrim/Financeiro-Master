@@ -145,6 +145,8 @@ npm run test:all
 
 ## 🔐 Importação de Extratos Bancários
 
+Funcionalidade de importação segura com processamento local.
+
 ### Como Utilizar
 
 1. Exporte seu extrato bancário como arquivo Excel (.xlsx/.xls) ou CSV
