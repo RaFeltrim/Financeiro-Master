@@ -1,5 +1,7 @@
 # Finance Master - Sistema Completo de Gestão Financeira
 
+> Sistema desenvolvido com foco em VV&T (Verificação, Validação e Teste de Software)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node.js-%3E%3D14.0.0-green.svg)](https://nodejs.org/)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/RaFeltrim/Financeiro-Master)
