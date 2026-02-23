@@ -1,5 +1,6 @@
 const ExcelImporter = require('../importers/excelImporter');
 const path = require('path');
+const logger = require('../utils/logger');
 
 class ExcelController {
   constructor(expenseService) {
@@ -24,7 +25,7 @@ class ExcelController {
         throw new Error('File must be an Excel file (.xlsx or .xls)');
       }
 
-      console.log(`Initiating Excel import from: ${filePath}`);
+      logger.info(`Initiating Excel import from: ${filePath}`);
       
       // Perform the import
       const result = await this.excelImporter.importFromExcel(filePath);
@@ -35,7 +36,7 @@ class ExcelController {
         data: result
       };
     } catch (error) {
-      console.error('Error in Excel import controller:', error);
+      logger.error('Error in Excel import controller:', error);
       return {
         success: false,
         message: `Error importing Excel file: ${error.message}`,
@@ -57,7 +58,7 @@ class ExcelController {
         data: stats
       };
     } catch (error) {
-      console.error('Error getting expense statistics:', error);
+      logger.error('Error getting expense statistics:', error);
       return {
         success: false,
         message: `Error retrieving statistics: ${error.message}`,
@@ -80,7 +81,7 @@ class ExcelController {
         count: expenses.length
       };
     } catch (error) {
-      console.error('Error getting all expenses:', error);
+      logger.error('Error getting all expenses:', error);
       return {
         success: false,
         message: `Error retrieving expenses: ${error.message}`,
@@ -112,7 +113,7 @@ class ExcelController {
         directory: resolvedPath
       };
     } catch (error) {
-      console.error('Error listing Excel files:', error);
+      logger.error('Error listing Excel files:', error);
       return {
         success: false,
         message: `Error listing Excel files: ${error.message}`,

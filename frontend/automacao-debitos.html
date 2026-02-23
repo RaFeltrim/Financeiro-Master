@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automação de Débitos - Finance Master</title>
+    <style>
+      nav {
+        margin: 20px 0;
+      }
+      
+      nav ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+      
+      nav li {
+        background: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+      
+      nav a {
+        text-decoration: none;
+        color: #333;
+        font-weight: 500;
+      }
+      
+      nav a:hover {
+        color: #007bff;
+      }
+    </style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .dashboard {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .card {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 4px solid #007bff;
+    }
+    
+    .btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    
+    .btn:hover {
+      background: #0056b3;
+    }
+    
+    .btn-success {
+      background: #28a745;
+    }
+    
+    .btn-warning {
+      background: #ffc107;
+      color: #212529;
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    
+    th {
+      background-color: #f2f2f2;
+    }
+    
+    .form-group {
+      margin: 10px 0;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .alert {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .alert-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="index.html">Controle de Gastos</a></li>
+      <li><a href="automacao-debitos.html">Automação de Débitos</a></li>
+      <li><a href="#" onclick="exportarDespesas('json')">Exportar Dados</a></li>
+    </ul>
+  </nav>
+  <h1>Automação de Débitos Automáticos</h1>
+  <script>
+    function exportarDespesas(formato) {
+      window.open(`/api/exportar/despesas?formato=${formato}`, '_blank');
+    }
+  </script>
+  
+  <div id="alerts-container"></div>
+  
+  <div class="dashboard">
+    <h2>Visão Geral</h2>
+    <div class="card">
+      <h3>Próximos Vencimentos</h3>
+      <div id="vencimentos-info"></div>
+    </div>
+    
+    <div class="card">
+      <h3>Sugestão de Transferência PIX</h3>
+      <div id="pix-suggestion"></div>
+    </div>
+    
+    <div class="card">
+      <h3>Estatísticas</h3>
+      <div id="estatisticas-info"></div>
+    </div>
+  </div>
+  
+  <div class="dashboard">
+    <h2>Gerenciar Débitos Automáticos</h2>
+    <button class="btn" onclick="showForm()">Adicionar Débito</button>
+    <button class="btn btn-success" onclick="atualizarDados()">Atualizar Dados</button>
+    
+    <div id="debito-form" class="card hidden">
+      <h3 id="form-title">Novo Débito Automático</h3>
+      <form id="debito-form-element">
+        <input type="hidden" id="debito-id">
+        <div class="form-group">
+          <label for="descricao">Descrição:</label>
+          <input type="text" id="descricao" required>
+        </div>
+        <div class="form-group">
+          <label for="valor">Valor (R$):</label>
+          <input type="number" id="valor" step="0.01" min="0" required>
+        </div>
+        <div class="form-group">
+          <label for="vencimento-dia">Dia do Vencimento:</label>
+          <input type="number" id="vencimento-dia" min="1" max="31" required>
+        </div>
+        <div class="form-group">
+          <label for="categoria">Categoria:</label>
+          <select id="categoria">
+            <option value="Moradia">Moradia</option>
+            <option value="Comunicação">Comunicação</option>
+            <option value="Saúde">Saúde</option>
+            <option value="Educação">Educação</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Alimentação">Alimentação</option>
+            <option value="Lazer">Lazer</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="ativo" checked> Ativo
+          </label>
+        </div>
+        <button type="submit" class="btn btn-success">Salvar</button>
+        <button type="button" class="btn" onclick="hideForm()">Cancelar</button>
+      </form>
+    </div>
+  </div>
+  
+  <div class="dashboard">
+    <h2>Débitos Cadastrados</h2>
+    <table id="debitos-table">
+      <thead>
+        <tr>
+          <th>Descrição</th>
+          <th>Valor</th>
+          <th>Vencimento</th>
+          <th>Categoria</th>
+          <th>Status</th>
+          <th>Próximo</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="debitos-body">
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let editMode = false;
+    
+    // Funções auxiliares
+    function showAlert(message, type = 'success') {
+      const container = document.getElementById('alerts-container');
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type}`;
+      alertDiv.textContent = message;
+      container.appendChild(alertDiv);
+      
+      setTimeout(() => {
+        container.removeChild(alertDiv);
+      }, 5000);
+    }
+    
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    }
+    
+    // Funções para carregar dados
+    async function carregarVencimentos() {
+      try {
+        const response = await fetch('/api/automacao/vencimentos-proximos');
+        const data = await response.json();
+        
+        document.getElementById('vencimentos-info').innerHTML = `
+          <p><strong>Total a vencer nos próximos 15 dias:</strong> R$ ${data.total.toFixed(2)}</p>
+          <p><strong>Número de débitos:</strong> ${data.vencimentos.length}</p>
+          ${data.vencimentos.length > 0 ? `<p><strong>Próximo vencimento:</strong> ${data.vencimentos[0].descricao}</p>` : '<p><strong>Próximo vencimento:</strong> Nenhum</p>'}
+        `;
+      } catch (error) {
+        console.error('Erro ao carregar vencimentos:', error);
+      }
+    }
+    
+    async function carregarSugestaoPIX() {
+      try {
+        // Simulando saldo atual de R$ 1500
+        const response = await fetch('/api/automacao/pix-sugestao?saldoAtual=1500');
+        const data = await response.json();
+        
+        if (data.precisaTransferencia) {
+          document.getElementById('pix-suggestion').innerHTML = `
+            <p><strong>Data ideal para transferência:</strong> ${formatDate(data.dataTransferenciaIdeal)}</p>
+            <p><strong>Próximo vencimento:</strong> ${formatDate(data.dataVencimento)} (${data.descricaoPrimeiro})</p>
+            <p><strong>Valor total a vencer:</strong> R$ ${data.valorTotal.toFixed(2)}</p>
+            <p><strong>Valor sugerido para transferência:</strong> R$ ${data.valorSugerido.toFixed(2)}</p>
+            <p><strong>Valor a transferir:</strong> R$ ${data.valorATransferir.toFixed(2)}</p>
+            ${data.valorATransferir > 0 ? 
+              `<p class="alert alert-warning">⚠️ É recomendado transferir R$ ${data.valorATransferir.toFixed(2)} para sua conta de débitos</p>` : 
+              '<p class="alert alert-success">✅ Saldo suficiente na conta de débitos</p>'
+            }
+          `;
+        } else {
+          document.getElementById('pix-suggestion').innerHTML = `
+            <p><strong>Nenhum vencimento nos próximos dias</strong></p>
+          `;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar sugestão PIX:', error);
+      }
+    }
+    
+    async function carregarEstatisticas() {
+      try {
+        const response = await fetch('/api/automacao/estatisticas');
+        const data = await response.json();
+        
+        document.getElementById('estatisticas-info').innerHTML = `
+          <p><strong>Total de Débitos:</strong> ${data.totalDebitos}</p>
+          <p><strong>Débitos Ativos:</strong> ${data.totalAtivos}</p>
+          <p><strong>Débitos Inativos:</strong> ${data.totalInativos}</p>
+          <p><strong>Vencimentos Próximos (30 dias):</strong> ${data.vencimentosProximos}</p>
+          <p><strong>Valor Total Próximos Vencimentos:</strong> R$ ${data.valorVencimentosProximos.toFixed(2)}</p>
+          ${data.proximoVencimento ? 
+            `<p><strong>Próximo Vencimento:</strong> ${formatDate(data.proximoVencimento.dataVencimento)} - ${data.proximoVencimento.descricao}</p>` : 
+            '<p><strong>Próximo Vencimento:</strong> Nenhum</p>'
+          }
+        `;
+      } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+      }
+    }
+    
+    async function carregarDebitos() {
+      try {
+        const response = await fetch('/api/automacao/debitos');
+        const debitos = await response.json();
+        const tbody = document.getElementById('debitos-body');
+        tbody.innerHTML = '';
+
+        debitos.forEach(debito => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${debito.descricao}</td>
+            <td>R$ ${debito.valor.toFixed(2)}</td>
+            <td>${debito.vencimentoDia}</td>
+            <td>${debito.categoria}</td>
+            <td>${debito.ativo ? 'Ativo' : 'Inativo'}</td>
+            <td>${formatDate(debito.proximaData)}</td>
+            <td>
+              <button class="btn btn-warning" onclick="editarDebito('${debito.id}')">Editar</button>
+              <button class="btn btn-danger" onclick="excluirDebito('${debito.id}')">Excluir</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Erro ao carregar débitos:', error);
+      }
+    }
+    
+    // Funções para manipular débitos
+    function showForm() {
+      document.getElementById('form-title').textContent = 'Novo Débito Automático';
+      document.getElementById('debito-form-element').reset();
+      document.getElementById('debito-id').value = '';
+      editMode = false;
+      document.getElementById('debito-form').classList.remove('hidden');
+    }
+    
+    function hideForm() {
+      document.getElementById('debito-form').classList.add('hidden');
+    }
+    
+    async function editarDebito(id) {
+      try {
+        const response = await fetch(`/api/automacao/debitos/${id}`);
+        // Como não temos endpoint para GET individual, vamos buscar todos e encontrar o específico
+        const debitos = await (await fetch('/api/automacao/debitos')).json();
+        const debito = debitos.find(d => d.id === id);
+        
+        if (debito) {
+          document.getElementById('form-title').textContent = 'Editar Débito';
+          document.getElementById('debito-id').value = debito.id;
+          document.getElementById('descricao').value = debito.descricao;
+          document.getElementById('valor').value = debito.valor;
+          document.getElementById('vencimento-dia').value = debito.vencimentoDia;
+          document.getElementById('categoria').value = debito.categoria;
+          document.getElementById('ativo').checked = debito.ativo;
+          
+          editMode = true;
+          document.getElementById('debito-form').classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar débito para edição:', error);
+      }
+    }
+    
+    async function excluirDebito(id) {
+      if (confirm("Tem certeza que deseja excluir este débito?")) {
+        try {
+          const response = await fetch(`/api/automacao/debitos/${id}`, {
+            method: 'DELETE'
+          });
+          
+          if (response.ok) {
+            showAlert('Débito excluído com sucesso!');
+            atualizarDados();
+          } else {
+            showAlert('Erro ao excluir débito', 'error');
+          }
+        } catch (error) {
+          console.error('Erro ao excluir débito:', error);
+          showAlert('Erro ao excluir débito', 'error');
+        }
+      }
+    }
+    
+    // Manipulação do formulário
+    document.getElementById('debito-form-element').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('debito-id').value;
+      const descricao = document.getElementById('descricao').value;
+      const valor = parseFloat(document.getElementById('valor').value);
+      const vencimentoDia = parseInt(document.getElementById('vencimento-dia').value);
+      const categoria = document.getElementById('categoria').value;
+      const ativo = document.getElementById('ativo').checked;
+      
+      const requestData = {
+        descricao,
+        valor,
+        vencimentoDia,
+        categoria,
+        ativo
+      };
+      
+      try {
+        let response;
+        if (editMode && id) {
+          response = await fetch(`/api/automacao/debitos/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+          });
+        } else {
+          response = await fetch('/api/automacao/debitos', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+          });
+        }
+        
+        if (response.ok) {
+          showAlert(editMode ? 'Débito atualizado com sucesso!' : 'Débito adicionado com sucesso!');
+          hideForm();
+          atualizarDados();
+        } else {
+          showAlert('Erro ao salvar débito', 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao salvar débito:', error);
+        showAlert('Erro ao salvar débito', 'error');
+      }
+    });
+    
+    // Função para atualizar todos os dados
+    async function atualizarDados() {
+      await Promise.all([
+        carregarVencimentos(),
+        carregarSugestaoPIX(),
+        carregarEstatisticas(),
+        carregarDebitos()
+      ]);
+    }
+    
+    // Inicializar a página
+    document.addEventListener('DOMContentLoaded', function() {
+      atualizarDados();
+    });
+  </script>
+</body>
+</html>

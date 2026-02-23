@@ -18,6 +18,14 @@ class BankImportController {
    * @param {Object} options - Import options
    * @returns {Object} Import results
    */
+  getSupportedFileTypes() {
+    return {
+      supportedTypes: ['.xlsx', '.xls', '.csv'],
+      maxFileSize: '10MB',
+      description: 'Supports Excel and CSV files up to 10MB'
+    };
+  }
+
   async handleImport(filePath, options = {}) {
     try {
       // Security validation: only allow specific file extensions
@@ -49,7 +57,8 @@ class BankImportController {
         data: result
       };
     } catch (error) {
-      console.error('Bank import error:', error.message);
+      const logger = require('../utils/logger');
+      logger.error('Bank import error:', error);
       return {
         success: false,
         message: `Import failed: ${error.message}`,

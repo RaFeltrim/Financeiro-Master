@@ -6,6 +6,7 @@ const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
 const ExpenseService = require('../services/expenseService');
+const logger = require('../utils/logger');
 
 class SecureBankImporter {
   constructor(expenseService) {
@@ -97,11 +98,11 @@ class SecureBankImporter {
       // Process and categorize transactions
       const processedTransactions = this.categorizeTransactions(outgoingTransactions);
       
-      console.log(`Successfully processed ${processedTransactions.length} outgoing transactions from ${filePath}`);
+      logger.info(`Successfully processed ${processedTransactions.length} outgoing transactions from ${filePath}`);
       
       return processedTransactions;
     } catch (error) {
-      console.error('Error importing bank statement:', error.message);
+      logger.error('Error importing bank statement:', error);
       throw error;
     }
   }
@@ -361,10 +362,10 @@ class SecureBankImporter {
           description: `${transaction.description} (Importado de extrato bancário)`
         });
         
-        console.log(`Successfully imported transaction: R$ ${expense.value.toFixed(2)} - ${expense.category}`);
+        logger.info(`Successfully imported transaction: R$ ${expense.value.toFixed(2)} - ${expense.category}`);
         results.imported++;
       } catch (error) {
-        console.error(`Failed to import transaction ${i + 1}:`, error.message);
+        logger.error(`Failed to import transaction ${i + 1}:`, error);
         results.errors.push({
           transaction: transactions[i],
           error: error.message
@@ -380,7 +381,7 @@ class SecureBankImporter {
    * Process a bank statement file and import to the system
    */
   async processAndImport(filePath) {
-    console.log(`Processing bank statement: ${filePath}`);
+    logger.info(`Processing bank statement: ${filePath}`);
     
     try {
       // Step 1: Import transactions from file
@@ -389,7 +390,7 @@ class SecureBankImporter {
       // Step 2: Import to expense system
       const results = await this.importToExpenseSystem(transactions);
       
-      console.log(`Import completed: ${results.imported} imported, ${results.failed} failed`);
+      logger.info(`Import completed: ${results.imported} imported, ${results.failed} failed`);
       
       return {
         success: true,
@@ -397,7 +398,7 @@ class SecureBankImporter {
         ...results
       };
     } catch (error) {
-      console.error('Error processing bank statement:', error.message);
+      logger.error('Error processing bank statement:', error);
       return {
         success: false,
         error: error.message,

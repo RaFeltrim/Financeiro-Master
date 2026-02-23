@@ -11,6 +11,18 @@
         <header>
             <h1>Controle de Gastos</h1>
             <p>Sistema de gerenciamento financeiro pessoal</p>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Controle de Gastos</a></li>
+                    <li><a href="automacao-debitos.html">Automação de Débitos</a></li>
+                    <li><a href="#" onclick="exportarDespesas('json')">Exportar Dados</a></li>
+                </ul>
+            </nav>
+            <script>
+                function exportarDespesas(formato) {
+                    window.open(`/api/exportar/despesas?formato=${formato}`, '_blank');
+                }
+            </script>
         </header>
 
         <main>
