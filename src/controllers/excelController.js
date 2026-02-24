@@ -26,10 +26,10 @@ class ExcelController {
       }
 
       logger.info(`Initiating Excel import from: ${filePath}`);
-      
+
       // Perform the import
       const result = await this.excelImporter.importFromExcel(filePath);
-      
+
       return {
         success: true,
         message: `Successfully processed ${result.totalRows} rows. Imported: ${result.imported}, Failed: ${result.failed}`,
@@ -47,12 +47,12 @@ class ExcelController {
 
   /**
    * Gets statistics about imported expenses
-   * @returns {Object} Statistics about expenses
+   * @returns {Promise<Object>} Statistics about expenses
    */
-  getExpenseStatistics() {
+  async getExpenseStatistics() {
     try {
-      const stats = this.excelImporter.getStatistics();
-      
+      const stats = await this.excelImporter.getStatistics();
+
       return {
         success: true,
         data: stats
@@ -69,12 +69,12 @@ class ExcelController {
 
   /**
    * Gets all expenses
-   * @returns {Array} Array of all expenses
+   * @returns {Promise<Object>} Array of all expenses
    */
-  getAllExpenses() {
+  async getAllExpenses() {
     try {
-      const expenses = this.excelImporter.getAllExpenses();
-      
+      const expenses = await this.excelImporter.getAllExpenses();
+
       return {
         success: true,
         data: expenses,
@@ -99,13 +99,13 @@ class ExcelController {
     try {
       const fs = require('fs');
       const resolvedPath = path.resolve(directoryPath);
-      
+
       const files = fs.readdirSync(resolvedPath);
       const excelFiles = files.filter(file => {
         const lowerFile = file.toLowerCase();
         return lowerFile.endsWith('.xlsx') || lowerFile.endsWith('.xls');
       }).map(file => path.join(resolvedPath, file));
-      
+
       return {
         success: true,
         data: excelFiles,

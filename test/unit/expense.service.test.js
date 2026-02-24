@@ -1,10 +1,9 @@
 const assert = require('assert');
 const ExpenseService = require('../../src/services/expenseService');
-const Expense = require('../../src/models/Expense');
 
-function test(description, testFn) {
+async function test(description, testFn) {
     try {
-        testFn();
+        await testFn();
         console.log(`✓ ${description}`);
         return true;
     } catch (error) {
@@ -13,253 +12,273 @@ function test(description, testFn) {
     }
 }
 
-function runTests() {
+async function runTests() {
     console.log('\n=== Expense Service Unit Tests ===\n');
-    
+
     let passed = 0;
     let total = 0;
-    
+    const service = new ExpenseService();
+
     // Test createExpense with valid data
     total++;
-    if (test('should create expense via service', () => {
-        const service = new ExpenseService();
-        const expense = service.createExpense({
+    let success = await test('should create expense via service', async () => {
+        const expense = await service.createExpense({
             value: 75.25,
             date: new Date(),
             category: 'Transporte',
             description: 'Uber para o trabalho'
         });
-        
+
         assert.strictEqual(expense.value, 75.25);
         assert.strictEqual(expense.category, 'Transporte');
         assert.strictEqual(expense.description, 'Uber para o trabalho');
         assert(expense.id !== undefined);
-        assert(expense.id > 0);
-    })) passed++;
-    
+
+        // cleanup for next tests
+        await service.deleteExpense(expense.id);
+    });
+    if (success) passed++;
+
     // Test createExpense with invalid data (negative value)
     total++;
-    if (test('should reject invalid expense (negative value)', () => {
-        const service = new ExpenseService();
-        
-        assert.throws(() => {
-            service.createExpense({
+    success = await test('should reject invalid expense (negative value)', async () => {
+        try {
+            await service.createExpense({
                 value: -20,
                 date: new Date(),
                 category: 'Lazer',
                 description: 'Cinema'
             });
-        }, /Expense value must be greater than zero/);
-    })) passed++;
-    
+            assert.fail('Expected error was not thrown');
+        } catch (err) {
+            assert(err.message.includes('Expense value must be greater than zero') || err.message.includes('greater than zero'));
+        }
+    });
+    if (success) passed++;
+
     // Test createExpense with invalid data (future date)
     total++;
-    if (test('should reject invalid expense (future date)', () => {
-        const service = new ExpenseService();
+    success = await test('should reject invalid expense (future date)', async () => {
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 2);
-        
-        assert.throws(() => {
-            service.createExpense({
+
+        try {
+            await service.createExpense({
                 value: 50,
                 date: futureDate,
                 category: 'Lazer',
                 description: 'Show'
             });
-        }, /Expense date cannot be in the future/);
-    })) passed++;
-    
+            assert.fail('Expected error was not thrown');
+        } catch (err) {
+            assert(err.message.includes('Expense date cannot be in the future') || err.message.includes('future'));
+        }
+    });
+    if (success) passed++;
+
     // Test getExpenseById
     total++;
-    if (test('should retrieve expense by ID', () => {
-        const service = new ExpenseService();
-        const expense = service.createExpense({
+    success = await test('should retrieve expense by ID', async () => {
+        const expense = await service.createExpense({
             value: 100,
             date: new Date(),
             category: 'Alimentação',
             description: 'Supermercado'
         });
-        
-        const retrieved = service.getExpenseById(expense.id);
+
+        const retrieved = await service.getExpenseById(expense.id);
         assert.notStrictEqual(retrieved, null);
         assert.strictEqual(retrieved.id, expense.id);
         assert.strictEqual(retrieved.value, 100);
-    })) passed++;
-    
+
+        await service.deleteExpense(expense.id);
+    });
+    if (success) passed++;
+
     // Test getExpenseById with non-existent ID
     total++;
-    if (test('should return null for non-existent ID', () => {
-        const service = new ExpenseService();
-        
-        const retrieved = service.getExpenseById(999);
+    success = await test('should return null for non-existent ID', async () => {
+        const retrieved = await service.getExpenseById('00000000-0000-0000-0000-000000000000');
         assert.strictEqual(retrieved, null);
-    })) passed++;
-    
+    });
+    if (success) passed++;
+
     // Test updateExpense
     total++;
-    if (test('should update expense', () => {
-        const service = new ExpenseService();
-        const expense = service.createExpense({
+    success = await test('should update expense', async () => {
+        const expense = await service.createExpense({
             value: 100,
             date: new Date(),
             category: 'Alimentação',
             description: 'Original'
         });
-        
-        const updated = service.updateExpense(expense.id, {
+
+        const updated = await service.updateExpense(expense.id, {
             value: 150,
             description: 'Atualizado'
         });
-        
+
         assert.strictEqual(updated.value, 150);
         assert.strictEqual(updated.description, 'Atualizado');
-    })) passed++;
-    
+
+        await service.deleteExpense(expense.id);
+    });
+    if (success) passed++;
+
     // Test updateExpense with invalid data
     total++;
-    if (test('should reject update with invalid data', () => {
-        const service = new ExpenseService();
-        const expense = service.createExpense({
+    success = await test('should reject update with invalid data', async () => {
+        const expense = await service.createExpense({
             value: 100,
             date: new Date(),
             category: 'Alimentação',
             description: 'Original'
         });
-        
-        assert.throws(() => {
-            service.updateExpense(expense.id, {
+
+        try {
+            await service.updateExpense(expense.id, {
                 value: -50
             });
-        }, /Expense value must be greater than zero/);
-    })) passed++;
-    
+            assert.fail('Expected error not thrown');
+        } catch (err) {
+            assert(err.message.includes('greater than zero'));
+        }
+
+        await service.deleteExpense(expense.id);
+    });
+    if (success) passed++;
+
     // Test deleteExpense
     total++;
-    if (test('should delete expense', () => {
-        const service = new ExpenseService();
-        const expense = service.createExpense({
+    success = await test('should delete expense', async () => {
+        const expense = await service.createExpense({
             value: 100,
             date: new Date(),
             category: 'Alimentação',
             description: 'Para deletar'
         });
-        
-        const deleted = service.deleteExpense(expense.id);
+
+        const deleted = await service.deleteExpense(expense.id);
         assert.strictEqual(deleted, true);
-        
-        const retrieved = service.getExpenseById(expense.id);
+
+        const retrieved = await service.getExpenseById(expense.id);
         assert.strictEqual(retrieved, null);
-    })) passed++;
-    
+    });
+    if (success) passed++;
+
     // Test deleteExpense with non-existent ID
     total++;
-    if (test('should return false when deleting non-existent expense', () => {
-        const service = new ExpenseService();
-        
-        const deleted = service.deleteExpense(999);
+    success = await test('should return false when deleting non-existent expense', async () => {
+        const deleted = await service.deleteExpense('00000000-0000-0000-0000-000000000000');
         assert.strictEqual(deleted, false);
-    })) passed++;
-    
+    });
+    if (success) passed++;
+
     // Test getAllExpenses
     total++;
-    if (test('should get all expenses', () => {
-        const service = new ExpenseService();
-        service.createExpense({
+    success = await test('should get all expenses', async () => {
+        await service.prisma.expense.deleteMany(); // clean for exact count
+
+        await service.createExpense({
             value: 50,
             date: new Date(),
             category: 'Transporte',
             description: 'Test 1'
         });
-        service.createExpense({
+        await service.createExpense({
             value: 75,
             date: new Date(),
             category: 'Alimentação',
             description: 'Test 2'
         });
-        
-        const allExpenses = service.getAllExpenses();
+
+        const allExpenses = await service.getAllExpenses();
         assert(Array.isArray(allExpenses));
         assert(allExpenses.length >= 2);
-    })) passed++;
-    
+    });
+    if (success) passed++;
+
     // Test getExpensesByCategory
     total++;
-    if (test('should filter expenses by category', () => {
-        const service = new ExpenseService();
-        service.createExpense({
+    success = await test('should filter expenses by category', async () => {
+        await service.prisma.expense.deleteMany();
+        await service.createExpense({
             value: 50,
             date: new Date(),
             category: 'Transporte',
             description: 'Test 1'
         });
-        service.createExpense({
+        await service.createExpense({
             value: 75,
             date: new Date(),
             category: 'Alimentação',
             description: 'Test 2'
         });
-        
-        const transporteExpenses = service.getExpensesByCategory('Transporte');
+
+        const transporteExpenses = await service.getExpensesByCategory('Transporte');
         assert(Array.isArray(transporteExpenses));
         assert(transporteExpenses.length >= 1);
         transporteExpenses.forEach(expense => {
             assert.strictEqual(expense.category, 'Transporte');
         });
-    })) passed++;
-    
+    });
+    if (success) passed++;
+
     // Test getExpensesByDateRange
     total++;
-    if (test('should filter expenses by date range', () => {
-        const service = new ExpenseService();
+    success = await test('should filter expenses by date range', async () => {
+        await service.prisma.expense.deleteMany();
         const today = new Date();
         const yesterday = new Date();
         yesterday.setDate(today.getDate() - 1);
-        
-        service.createExpense({
+
+        await service.createExpense({
             value: 50,
             date: today,
             category: 'Transporte',
             description: 'Today'
         });
-        service.createExpense({
+        await service.createExpense({
             value: 75,
             date: yesterday,
             category: 'Alimentação',
             description: 'Yesterday'
         });
-        
-        const rangeExpenses = service.getExpensesByDateRange(yesterday, today);
+
+        const rangeExpenses = await service.getExpensesByDateRange(yesterday, today);
         assert(Array.isArray(rangeExpenses));
         assert(rangeExpenses.length >= 2);
-    })) passed++;
-    
+    });
+    if (success) passed++;
+
     // Test getTotalExpenses
     total++;
-    if (test('should calculate total expenses', () => {
-        const service = new ExpenseService();
-        service.createExpense({
+    success = await test('should calculate total expenses', async () => {
+        await service.prisma.expense.deleteMany();
+        await service.createExpense({
             value: 50,
             date: new Date(),
             category: 'Transporte',
             description: 'Test 1'
         });
-        service.createExpense({
+        await service.createExpense({
             value: 75,
             date: new Date(),
             category: 'Alimentação',
             description: 'Test 2'
         });
-        
-        const total = service.getTotalExpenses();
-        assert.strictEqual(total, 125);
-    })) passed++;
-    
+
+        const _total = await service.getTotalExpenses();
+        assert.strictEqual(_total, 125);
+    });
+    if (success) passed++;
+
     console.log(`\n=== Expense Service Tests Summary: ${passed}/${total} passed ===`);
     return { passed, total };
 }
 
 if (require.main === module) {
-    runTests();
+    runTests().catch(console.error);
 }
 
 module.exports = { test, runTests };

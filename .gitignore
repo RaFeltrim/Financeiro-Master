@@ -28,3 +28,4 @@ temp/
 desktop.ini
 .DS_Store
 .git
+/src/generated/prisma

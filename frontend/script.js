@@ -24,7 +24,7 @@ class ExpenseTrackerFrontend {
         if (importBtn) {
             importBtn.addEventListener('click', () => this.handleImport());
         }
-        
+
         // Bank import button
         const bankImportBtn = document.getElementById('import-bank-btn');
         if (bankImportBtn) {
@@ -63,7 +63,7 @@ class ExpenseTrackerFrontend {
             }
 
             const newExpense = await response.json();
-            
+
             // Refresh the list
             await this.loadExpenses();
             this.renderExpenses();
@@ -71,7 +71,7 @@ class ExpenseTrackerFrontend {
 
             // Reset form
             document.getElementById('expense-form').reset();
-            
+
             // Set date back to today
             const resetToday = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = resetToday;
@@ -96,7 +96,7 @@ class ExpenseTrackerFrontend {
             });
 
             const result = await response.json();
-            
+
             if (result.success) {
                 this.showMessage(result.message, 'success');
                 // Refresh data after import
@@ -113,28 +113,28 @@ class ExpenseTrackerFrontend {
 
     async handleBankImport() {
         const fileInput = document.getElementById('bank-statement-file');
-        
+
         if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
             this.showMessage('Por favor, selecione um arquivo de extrato bancário', 'error');
             return;
         }
-        
+
         const file = fileInput.files[0];
-        
+
         // Validate file type
         const allowedTypes = ['.xlsx', '.xls', '.csv'];
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-        
+
         if (!allowedTypes.includes(fileExtension)) {
             this.showMessage(`Tipo de arquivo não suportado: ${fileExtension}. Tipos suportados: ${allowedTypes.join(', ')}`, 'error');
             return;
         }
-        
+
         // Note: In a real implementation, we would upload the file to the server
         // For this simulation, we'll call the API to show the functionality
         try {
             this.showMessage('Iniciando importação de extrato bancário...', 'success');
-            
+
             const response = await fetch('/api/import-bank-statement', {
                 method: 'POST',
                 headers: {
@@ -144,18 +144,18 @@ class ExpenseTrackerFrontend {
                     filePath: file.name // In a real app, this would be the path after upload
                 })
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 this.showMessage(
                     `Importação de extrato bancário iniciada com sucesso! ` +
                     `Tipos suportados: ${result.supportedFileTypes.join(', ')} ` +
                     `Tamanho máximo: ${result.maxFileSize}. ` +
-                    'Os dados serão processados localmente, mantendo sua privacidade.', 
+                    'Os dados serão processados localmente, mantendo sua privacidade.',
                     'success'
                 );
-                
+
                 // Refresh data after import
                 await this.loadExpenses();
                 this.renderExpenses();
@@ -167,7 +167,7 @@ class ExpenseTrackerFrontend {
             this.showMessage('Erro ao importar extrato bancário: ' + error.message, 'error');
         }
     }
-    
+
     async loadExpenses() {
         try {
             const response = await fetch('/api/expenses');
@@ -179,6 +179,16 @@ class ExpenseTrackerFrontend {
             console.error('Error loading expenses:', error);
             this.showMessage('Erro ao carregar despesas: ' + error.message, 'error');
         }
+    }
+
+    escapeHTML(str) {
+        if (!str) return '-';
+        return str.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
     renderExpenses() {
@@ -193,18 +203,18 @@ class ExpenseTrackerFrontend {
 
         sortedExpenses.forEach(expense => {
             const row = document.createElement('tr');
-            
+
             row.innerHTML = `
                 <td>${expense.id}</td>
                 <td>R$ ${expense.value.toFixed(2)}</td>
                 <td>${this.formatDate(expense.date)}</td>
-                <td>${expense.category}</td>
-                <td>${expense.description || '-'}</td>
+                <td>${this.escapeHTML(expense.category)}</td>
+                <td>${this.escapeHTML(expense.description)}</td>
                 <td>
-                    <button class="delete-btn" onclick="deleteExpense(${expense.id})">Excluir</button>
+                    <button class="delete-btn" onclick="deleteExpense('${expense.id}')">Excluir</button>
                 </td>
             `;
-            
+
             tbody.appendChild(row);
         });
     }
@@ -225,7 +235,7 @@ class ExpenseTrackerFrontend {
                 await this.loadExpenses();
                 this.renderExpenses();
                 await this.updateStats();
-                
+
                 this.showMessage('Despesa excluída com sucesso!', 'success');
             } catch (error) {
                 this.showMessage(error.message, 'error');
@@ -276,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Make deleteExpense available globally for HTML onclick handlers
-window.deleteExpense = function(id) {
+window.deleteExpense = function (id) {
     if (window.expenseTracker) {
         window.expenseTracker.deleteExpense(id);
     }

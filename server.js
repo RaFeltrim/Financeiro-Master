@@ -16,13 +16,13 @@ app.use(cors());
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: {
-    error: 'Too many requests from this IP, please try again later.'
-  },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: {
+        error: 'Too many requests from this IP, please try again later.'
+    },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
 app.use(limiter);
@@ -57,97 +57,70 @@ const automacaoController = new AutomacaoDebitosController();
 const BackupExportController = require('./src/controllers/backupExportController');
 const backupController = new BackupExportController();
 
-// In-memory storage for expenses (in a real app, this would be a database)
-let expenses = [
-    {
-        id: 1,
-        value: 150.75,
-        date: new Date().toISOString().split('T')[0],
-        category: 'Alimentação',
-        description: 'Compra de supermercado',
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: 2,
-        value: 45.30,
-        date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // yesterday
-        category: 'Transporte',
-        description: 'Gasolina',
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: 3,
-        value: 120.00,
-        date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 days ago
-        category: 'Lazer',
-        description: 'Cinema',
-        createdAt: new Date().toISOString()
-    }
-];
-
-let nextId = 4;
+// Expense Service instance
+const ExpenseService = require('./src/services/expenseService');
+const expenseService = new ExpenseService();
 
 // Get all expenses
-app.get('/api/expenses', (req, res) => {
-    res.json(expenses);
+app.get('/api/expenses', async (req, res) => {
+    try {
+        const expensesList = await expenseService.getAllExpenses();
+        res.json(expensesList);
+    } catch (error) {
+        logger.error('Error fetching expenses:', error);
+        res.status(500).json({ error: 'Erro ao buscar despesas' });
+    }
 });
 
 // Add a new expense
-app.post('/api/expenses', (req, res) => {
+app.post('/api/expenses', async (req, res) => {
     const { value, date, category, description } = req.body;
 
-    // Basic validation
-    if (value <= 0) {
-        return res.status(400).json({ error: 'O valor deve ser maior que zero' });
+    try {
+        const expense = await expenseService.createExpense({
+            value: parseFloat(value),
+            date,
+            category,
+            description,
+            origem: 'MANUAL'
+        });
+        res.status(201).json(expense);
+    } catch (error) {
+        logger.error('Error creating expense:', error);
+        res.status(400).json({ error: error.message });
     }
-
-    const dateObj = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (dateObj > today) {
-        return res.status(400).json({ error: 'A data não pode ser futura' });
-    }
-
-    if (!category) {
-        return res.status(400).json({ error: 'A categoria é obrigatória' });
-    }
-
-    const expense = {
-        id: nextId++,
-        value: parseFloat(value),
-        date: date,
-        category: category,
-        description: description || '',
-        createdAt: new Date().toISOString()
-    };
-
-    expenses.push(expense);
-    res.json(expense);
 });
 
 // Delete an expense
-app.delete('/api/expenses/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = expenses.findIndex(expense => expense.id === id);
-
-    if (index === -1) {
-        return res.status(404).json({ error: 'Despesa não encontrada' });
+app.delete('/api/expenses/:id', async (req, res) => {
+    const id = req.params.id; // UUID as string
+    try {
+        const deleted = await expenseService.deleteExpense(id);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Despesa não encontrada' });
+        }
+        res.json({ message: 'Despesa excluída com sucesso' });
+    } catch (error) {
+        logger.error(`Error deleting expense ${id}:`, error);
+        res.status(500).json({ error: 'Erro ao excluir despesa' });
     }
-
-    expenses.splice(index, 1);
-    res.json({ message: 'Despesa excluída com sucesso' });
 });
 
 // Get expense statistics
-app.get('/api/stats', (req, res) => {
-    const totalExpenses = expenses.length;
-    const totalValue = expenses.reduce((sum, expense) => sum + expense.value, 0);
+app.get('/api/stats', async (req, res) => {
+    try {
+        const expensesList = await expenseService.getAllExpenses();
+        const totalExpenses = expensesList.length;
+        const totalValue = await expenseService.getTotalExpenses();
 
-    res.json({
-        totalExpenses,
-        totalValue
-    });
+        res.json({
+            totalExpenses,
+            totalValue
+        });
+    } catch (error) {
+        logger.error('Error getting stats:', error);
+        res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+    }
 });
 
 // Excel import endpoint (simulated)
@@ -165,19 +138,19 @@ app.post('/api/import-excel', (req, res) => {
 app.post('/api/import-bank-statement', async (req, res) => {
     try {
         const { filePath } = req.body;
-        
+
         if (!filePath) {
             return res.status(400).json({
                 success: false,
                 message: 'File path is required for bank statement import'
             });
         }
-        
+
         // Note: In a real implementation, you would upload the file to the server
         // For this simulation, we'll return the supported file types
         // In a real app, you'd save the file temporarily and process it
         const result = await bankImportController.getSupportedFileTypes();
-        
+
         res.json({
             success: true,
             message: 'Bank statement import endpoint ready. In a real implementation, this would process the specified file.',
@@ -281,12 +254,12 @@ app.get('/api/backup/download/:nomeArquivo', (req, res) => {
 
 // Error handling middleware
 app.use((error, req, res, next) => {
-  logger.error('Unhandled error occurred', error);
-  
-  res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
-  });
+    logger.error('Unhandled error occurred', error);
+
+    res.status(500).json({
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    });
 });
 
 app.listen(PORT, () => {

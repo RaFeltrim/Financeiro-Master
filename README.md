@@ -9,6 +9,7 @@ Finance Master is a complete financial control system for tracking income (entri
 - ⚙️ **Automated Debits**: Automation for recurring debit payments with scheduled transfers
 - 📊 **Financial Reporting**: Detailed reports and analytics with risk level indicators
 - 💾 **Backup & Export**: Multiple format support (JSON, CSV) for data backup and export
+- 🗄️ **Persistent Storage**: Robust data persistence using **Prisma ORM** tied to a local **SQLite** database
 - 🛡️ **Security First**: 100% local data processing with comprehensive security measures
 - 🌐 **Web Interface**: Responsive web-based UI with full CRUD operations
 - 📱 **Mobile Friendly**: Responsive design for use on all devices
@@ -77,6 +78,8 @@ npm start
 
 - Node.js
 - Express.js
+- Prisma ORM (v4.14)
+- SQLite Database
 - JavaScript
 - HTML/CSS
 - Excel processing (xlsx library)
